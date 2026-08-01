@@ -185,3 +185,368 @@ root@docker-host ~ ➜  docker run -d --name blue-app -e APP_COLOR=blue -p 38282
 
 
 docker run -d --name mysql-db -e MYSQL_ROOT_PASSWORD=db_pass123 mysql
+
+
+root@docker-host ~ ✖ docker network create clicknet
+6bec81c63371242da0f8da590868536f2f3e749303805302dbddcb9b7c3f7535
+
+root@docker-host ~ ➜  docker run -d --name redis --network clicknet redis:alpine
+Unable to find image 'redis:alpine' locally
+alpine: Pulling from library/redis
+aae5c34d2458: Pull complete 
+e6f31ffc071e: Pull complete 
+5107053fcce4: Pull complete 
+59b5200b7471: Pull complete 
+4f4fb700ef54: Pull complete 
+dcaf2c69e5bf: Pull complete 
+5c39d5b7aae4: Pull complete 
+e237c80e2d80: Download complete 
+72951379407e: Download complete 
+Digest: sha256:e8eb6f2980c06c6a25c08f62cb2e00dc7d2fead9aa492cfdd8b54a42109ae0f2
+Status: Downloaded newer image for redis:alpine
+dc8792bbd19fb33dc3f4956b8bb7f79b46630509d8ed27fd6348daeafde24cf1
+
+root@docker-host ~ ➜  docker run -d --name clickcounter --network clicknet -p 8085:5000 kodekloud/click-counter
+Unable to find image 'kodekloud/click-counter:latest' locally
+latest: Pulling from kodekloud/click-counter
+a7ad1a75a999: Pull complete 
+473063430a4f: Pull complete 
+ec9e91bed5a2: Pull complete 
+540db60ca938: Pull complete 
+452c68a16ccd: Pull complete 
+37ce6546d5dd: Pull complete 
+156f0b0493cb: Pull complete 
+767433e10bb0: Pull complete 
+3fe82d8a2401: Pull complete 
+4a41f7c94204: Pull complete 
+Digest: sha256:530e4532a718e8f5cbda05844a6c0638ebe8898fa4c4307ee6afbdd5d1f213db
+Status: Downloaded newer image for kodekloud/click-counter:latest
+7ca93061f9ae0bba357c217a0ea2bc0c1ada1ef7ae6df28ae82f80febaa7a662
+
+root@docker-host ~ ➜  docker ps -a
+CONTAINER ID   IMAGE                     COMMAND                  CREATED          STATUS          PORTS                                         NAMES
+7ca93061f9ae   kodekloud/click-counter   "flask run"              59 seconds ago   Up 58 seconds   0.0.0.0:8085->5000/tcp, [::]:8085->5000/tcp   clickcounter
+dc8792bbd19f   redis:alpine              "docker-entrypoint.s…"   2 minutes ago    Up 2 minutes    6379/tcp                                      redis
+
+root@docker-host ~ ➜  docker stop 7ca9 dc87
+7ca9
+dc87
+
+root@docker-host ~ ➜  docker rm 7ca9 dc87
+7ca9
+dc87
+
+root@docker-host ~ ➜  docker network rm clicknet
+clicknet
+
+root@docker-host ~ ➜  cd clickcounter
+
+root@docker-host ~/clickcounter ➜  cat << 'EOF' > compose.yaml
+services:
+  redis:
+    image: redis:alpine
+  clickcounter:
+    image: kodekloud/click-counter
+    ports:
+      - 8085:5000
+EOF
+
+root@docker-host ~/clickcounter ➜  docker compose up -d
+[+] up 3/3
+ ✔ Network clickcounter_default          Created                                                                                                                  0.1s
+ ✔ Container clickcounter-clickcounter-1 Started                                                                                                                  0.4s
+ ✔ Container clickcounter-redis-1        Started
+
+
+root@docker-host ~ ➜  bash get-data.sh
+mysql: [Warning] Using a password on the command line interface can be insecure.
+id      Name    Phone   Email
+1       Kareem  130-5655        Duis.volutpat.nunc@quamCurabitur.org
+2       Ruby    1-584-149-0770  Nulla.tempor@vitaeorciPhasellus.org
+3       Rowan   199-8663        consectetuer.adipiscing.elit@Sedmalesuada.co.uk
+
+now crash happens and bash cmd returns error 
+
+but if we mount 
+
+mkdir -p /opt/data
+
+root@docker-host ~ ➜  docker run --mount type=bind,source=/opt/data,target=/var/lib/mysql -d --name mysql-db -e MYSQL_ROOT_PASSWORD=db_pass123 mysql
+b1f7079f9e51426f104b2adcaa14e16f3d20d26aa83622f1a3106baa509870cb
+
+root@docker-host ~ ➜  bash get-data.sh
+mysql: [Warning] Using a password on the command line interface can be insecure.
+id      Name    Phone   Email
+1       Kareem  130-5655        Duis.volutpat.nunc@quamCurabitur.org
+2       Ruby    1-584-149-0770  Nulla.tempor@vitaeorciPhasellus.org
+3       Rowan   199-8663        consectetuer.adipiscing.elit@Sedmalesuada.co.uk
+
+now crash happens and we rebuild using docker run same cmd data can be fetched from opt/data
+
+
+root@docker-host ~ ➜  docker network ls 
+NETWORK ID     NAME      DRIVER    SCOPE
+6298f695052a   bridge    bridge    local
+238b23f4e2a9   host      host      local
+59b9cbf97489   none      null      local
+
+root@docker-host ~ ➜  docker ps -a
+CONTAINER ID   IMAGE     COMMAND        CREATED          STATUS          PORTS     NAMES
+8203f97a35ae   alpine    "sleep 1000"   14 seconds ago   Up 13 seconds             alpine-1
+
+root@docker-host ~ ➜  docker container inspect alpine-1
+
+root@docker-host ~ ➜  docker network inspect bridge
+[
+    {
+        "Name": "bridge",
+        "Id": "6298f695052a66c84cac6314b5faf1a21277b4f909a25d7b739b6d64f1f6bf49",
+        "Created": "2026-08-01T16:31:40.796607247-04:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv4": true,
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.12.0.0/24",
+                    "Gateway": "172.12.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Options": {
+            "com.docker.network.bridge.default_bridge": "true",
+            "com.docker.network.bridge.enable_icc": "true",
+            "com.docker.network.bridge.enable_ip_masquerade": "true",
+            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+            "com.docker.network.bridge.name": "docker0",
+            "com.docker.network.driver.mtu": "1500"
+        },
+        "Labels": {},
+        "Containers": {},
+        "Status": {
+            "IPAM": {
+                "Subnets": {
+                    "172.12.0.0/24": {
+                        "IPsInUse": 3,
+                        "DynamicIPsAvailable": 253
+                    }
+                }
+            }
+        }
+    }
+]
+
+
+
+root@docker-host ~ ➜  docker run --name alpine-2 --network=none alpine
+
+root@docker-host ~ ➜  docker network create --driver bridge --subnet 182.10.0.0/24 --gateway 182.18.0.1 wp-mysql-network
+no matching subnet for gateway 182.18.0.1
+
+root@docker-host ~ ✖ docker network create --driver bridge --subnet 182.18.0.0/24 --gateway 182.18.0.1 wp-mysql-network
+b3227988141faac161b12d83b85c7929a34b132b86680e2220b12bb50424d8c5
+
+root@docker-host ~ ➜  docker container run -d -e MYSQL_ROOT_PASSWORD=db_pass123 --name mysql-db --network wp-mysql-network mysql:8.4
+Unable to find image 'mysql:8.4' locally
+8.4: Pulling from library/mysql
+a8ca58bc6ea9: Pull complete 
+9bebc71cfb90: Pull complete 
+d0f44f87b588: Pull complete 
+3efae9596a0b: Pull complete 
+860b7bc67210: Pull complete 
+30627cea5424: Pull complete 
+a5cddd18da97: Pull complete 
+01cb8e5472ee: Pull complete 
+289dbe2b4aa0: Pull complete 
+e31ea7613c63: Pull complete 
+80a9fe861429: Download complete 
+32ca1b8d1938: Download complete 
+Digest: sha256:b3b90af2a6552ae30c266fdb7d5dd55f3afb72404bb78d37fe8a23eb857fd3fb
+Status: Downloaded newer image for mysql:8.4
+7e6b36181e2c973a66327ef661f916a3a4d11bc6fa7e3c536c5d170952e1ae14
+
+root@docker-host ~ ➜  docker container run --network=wp-mysql-network -e DB_Host=mysql-db -e DB_Password=db_pass123 -p 38080:8080 --name webapp -d kodekloud/latest-webapp-mysql
+27268dc3b93d470538814040a70148c5e631b86a81ba909683a24354a436c7b2
+
+
+Let's practice deploying a registry server on our own.
+Run a registry server with name equals to my-registry using registry:2 image with host port set to 5000, and restart policy set to always.
+
+Note: Registry server is exposed on port 5000 in the image.
+
+
+Here we are hosting our own registry using the open source Docker Registry.
+
+NOTE: You do not need to run docker login for this local registry setup because authentication is not configured. This registry allows for anonymous access.
+
+docker run -d --name my-registry --restart=always -p 5000:5000 registry:2
+
+
+
+
+root@docker-host ~ ➜  docker run -d --name my-registry --restart always -p 5000:5000 registry:2
+Unable to find image 'registry:2' locally
+2: Pulling from library/registry
+6d464ea18732: Pull complete 
+44cf07d57ee4: Pull complete 
+3493bf46cdec: Pull complete 
+8e82f80af0de: Pull complete 
+bbbdd6c6894b: Pull complete 
+32a76c78501f: Download complete 
+b537bf6d1146: Download complete 
+Digest: sha256:a3d8aaa63ed8681a604f1dea0aa03f100d5895b6a58ace528858a7b332415373
+Status: Downloaded newer image for registry:2
+01c0f3de94d848e9d58ebfb4f2e21fae65863012b2e1f3adc6fe9d48c57dd29f
+
+root@docker-host ~ ➜  docker run -d --name my-registry --restart=always -p 5000:5000 registry:2
+docker: Error response from daemon: Conflict. The container name "/my-registry" is already in use by container "01c0f3de94d848e9d58ebfb4f2e21fae65863012b2e1f3adc6fe9d48c57dd29f". You have to remove (or rename) that container to be able to reuse that name.
+
+Run 'docker run --help' for more information
+
+root@docker-host ~ ✖ docker rm -f my-registry
+my-registry
+
+root@docker-host ~ ➜  docker run -d --name my-registry --restart=always -p 5000:5000 registry:2
+a48007db06cf7833485ac5d66af0263e958ee04a1281cf0b6b4030594a528de5
+
+root@docker-host ~ ➜  docker pull nginx:latest httpd:latest
+docker: 'docker pull' requires 1 argument
+
+Usage:  docker pull [OPTIONS] NAME[:TAG|@DIGEST]
+
+Run 'docker pull --help' for more information
+
+root@docker-host ~ ✖ docker pull nginx:latest
+latest: Pulling from library/nginx
+d26f27cc8c41: Pull complete 
+3c7ab7949321: Pull complete 
+cacfcdd01f30: Pull complete 
+2bedaf25031a: Pull complete 
+062e450697fa: Pull complete 
+82454cdbf456: Pull complete 
+b6698f04e005: Pull complete 
+6c496f5b5050: Download complete 
+ea1d76ccc2c6: Download complete 
+Digest: sha256:5a88c9c45479443d7be2eadc894b4ed0a9801bae03d97a5760ae13b5c2005942
+Status: Downloaded newer image for nginx:latest
+docker.io/library/nginx:latest
+
+root@docker-host ~ ➜  docker pull httpd:latest
+latest: Pulling from library/httpd
+4f4fb700ef54: Pull complete 
+ebd81352b960: Pull complete 
+39d55e966aeb: Pull complete 
+69b5b831a361: Pull complete 
+010f7d7e175f: Pull complete 
+c72742279dc1: Download complete 
+507729664175: Download complete 
+Digest: sha256:305fd8326a27a137fedb8900f26375699ab233cc37793f35cf5d7c65671fb252
+Status: Downloaded newer image for httpd:latest
+docker.io/library/httpd:latest
+
+root@docker-host ~ ➜  docker push localhost:5000/nginx:latest
+The push refers to repository [localhost:5000/nginx]
+tag does not exist: localhost:5000/nginx:latest
+
+root@docker-host ~ ✖ docker image tag nginx:latest localhost:5000/nginx:latest
+
+root@docker-host ~ ➜  docker image tag httpd:latest localhost:5000/httpd:latest
+
+root@docker-host ~ ➜  docker image push localhost:5000/nginx:latest
+The push refers to repository [localhost:5000/nginx]
+3c7ab7949321: Pushed 
+062e450697fa: Pushed 
+b6698f04e005: Pushed 
+2bedaf25031a: Pushed 
+82454cdbf456: Pushed 
+cacfcdd01f30: Pushed 
+d26f27cc8c41: Pushed 
+latest: digest: sha256:db4f612f385437d11eb26620a4f1d7efb3ff44e1296a3c21540b30454e6e2bf3 size: 2290
+
+i Info → Not all multiplatform-content is present and only the available single-platform image was pushed
+         sha256:5a88c9c45479443d7be2eadc894b4ed0a9801bae03d97a5760ae13b5c2005942 -> sha256:db4f612f385437d11eb26620a4f1d7efb3ff44e1296a3c21540b30454e6e2bf3
+
+root@docker-host ~ ➜  docker image push localhost:5000/httpd:latest
+The push refers to repository [localhost:5000/httpd]
+062e450697fa: Mounted from nginx 
+4f4fb700ef54: Pushed 
+69b5b831a361: Pushed 
+ebd81352b960: Pushed 
+010f7d7e175f: Pushed 
+39d55e966aeb: Pushed 
+latest: digest: sha256:0e4cdd00727fc23f44447b65dfdf2958dc29f661fbf74404e0d2adbbac1b0892 size: 2093
+
+i Info → Not all multiplatform-content is present and only the available single-platform image was pushed
+         sha256:305fd8326a27a137fedb8900f26375699ab233cc37793f35cf5d7c65671fb252 -> sha256:0e4cdd00727fc23f44447b65dfdf2958dc29f661fbf74404e0d2adbbac1b0892
+
+root@docker-host ~ ➜  curl localhost:5000/v2/_catalog
+{"repositories":["httpd","nginx"]}
+
+root@docker-host ~ ➜  docker image prune -a
+WARNING! This will remove all images without at least one container associated to them.
+Are you sure you want to continue? [y/N] y
+Deleted Images:
+untagged: httpd:latest
+untagged: mysql:latest
+deleted: sha256:c11782aa2a96624c1efc121768641d96954faa136d6aa82751b032d8c426ffbc
+deleted: sha256:f0f0d4591d23106312b3f7fbad8f4062a938a64e3e748c47b8c4347640265182
+deleted: sha256:6ff4662ac78b1775d53e7f1f1afb9ead0211c7ddc0a0e36282d31c13638c283b
+untagged: redis:latest
+deleted: sha256:0c341492924cad6f5483f9133e43bd6c51ecdecbcadfac5b51657393b6a7936c
+deleted: sha256:94ea4f5ccdaa6b154df99a792986ecb3ffbb3fe7722a197220477f1f3e65f9fe
+deleted: sha256:68968b74bd96d4e2db262b383f0dd4d1fa47ccbe3e93e1020018299abcc10e01
+untagged: localhost:5000/nginx:latest
+untagged: kodekloud/latest-webapp-mysql:latest
+deleted: sha256:d5efbb3fe6216fe983fb21c0e300c353ae7a63190231808c3c07b7add604191e
+untagged: kodekloud/simple-webapp:latest
+deleted: sha256:e5355b4c7804f453d79de75d6659ee702eeebbe30c02d9f1ce6602a96b576e57
+untagged: alpine:latest
+deleted: sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11
+deleted: sha256:4d889c14e7d5a73929ab00be2ef8ff22437e7cbc545931e52554a7b00e123d8b
+deleted: sha256:452bfe804076a924cc3982dfe3a7d760a387d8332fa32b8f7050d763895f901f
+untagged: nginx:latest
+deleted: sha256:5a88c9c45479443d7be2eadc894b4ed0a9801bae03d97a5760ae13b5c2005942
+deleted: sha256:db4f612f385437d11eb26620a4f1d7efb3ff44e1296a3c21540b30454e6e2bf3
+deleted: sha256:7f506a8a5a97f0fc5dfbea6036e9826352844f4242c42464505a8497e5528e64
+untagged: postgres:latest
+deleted: sha256:270cac6290e2dbf63201faa0e474bfa391fdeba5c439326904d43753b6f3387c
+deleted: sha256:bfae840554bdbd4e9f8d097d8e23ffda8aac82866e04ea0d6bc09647234dd359
+deleted: sha256:be2fb4a6ba1e55882e1f0455a122103fce7d6aa6995f64885bee5b3d8c24a8e9
+untagged: ubuntu:latest
+deleted: sha256:f3d28607ddd78734bb7f71f117f3c6706c666b8b76cbff7c9ff6e5718d46ff64
+deleted: sha256:d31acef2a964b6df1f2b7e20a1525c4f2378024e087a4f8a8a9a4247e6a79573
+deleted: sha256:8c0eea215df160972de40666f5a19cd7ce005a1443e3ccd24794f0946cd92436
+untagged: localhost:5000/httpd:latest
+deleted: sha256:305fd8326a27a137fedb8900f26375699ab233cc37793f35cf5d7c65671fb252
+deleted: sha256:0e4cdd00727fc23f44447b65dfdf2958dc29f661fbf74404e0d2adbbac1b0892
+deleted: sha256:3d08f095a785fa01bc58a9c2ba2bfa13fd6aefe17440135c19d7bc0060582db8
+
+Total reclaimed space: 670.7MB
+
+root@docker-host ~ ➜  docker images
+                                                                                                                                                  i Info →   U  In Use
+IMAGE        ID             DISK USAGE   CONTENT SIZE   EXTRA
+registry:2   a3d8aaa63ed8       37.4MB         10.3MB    U   
+
+root@docker-host ~ ➜  docker ps -a
+CONTAINER ID   IMAGE        COMMAND                  CREATED         STATUS         PORTS                                         NAMES
+a48007db06cf   registry:2   "/entrypoint.sh /etc…"   7 minutes ago   Up 7 minutes   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp   my-registry
+
+root@docker-host ~ ➜  docker rm a480
+Error response from daemon: cannot remove container "a480": container is running: stop the container before removing or force remove
+
+root@docker-host ~ ✖ docker stop a480
+a480
+
+root@docker-host ~ ➜  docker rm a480
+a480
