@@ -1,0 +1,187 @@
+root@docker-host ~ ➜  docker --version
+Docker version 29.4.3, build 055a478
+
+root@docker-host ~ ➜  docker ps 
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+
+root@docker-host ~ ➜  docker images
+                                                                                                                                                  i Info →   U  In Use
+IMAGE                                  ID             DISK USAGE   CONTENT SIZE   EXTRA
+alpine:latest                          5b10f432ef3d       13.1MB         3.95MB        
+kodekloud/latest-webapp-mysql:latest   d5efbb3fe621        104MB         25.6MB        
+kodekloud/simple-webapp:latest         e5355b4c7804        131MB         31.8MB        
+mysql:latest                           c11782aa2a96        1.3GB          290MB        
+nginx:alpine                           feb6f75a08aa       93.9MB           27MB        
+nginx:latest                           06aa3d7be10b        240MB         65.9MB        
+postgres:latest                        270cac6290e2        650MB          168MB        
+redis:latest                           0c341492924c        204MB         55.3MB        
+ubuntu:latest                          f3d28607ddd7        160MB         45.3MB        
+
+root@docker-host ~ ➜  docker run -d redis
+8530e0a2037357ffa96cf61d1884a4b320fc488523936d3b660cd309d3f4ae7c
+
+root@docker-host ~ ➜  docker ps -a
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS      NAMES
+8530e0a20373   redis     "docker-entrypoint.s…"   43 seconds ago   Up 42 seconds   6379/tcp   serene_mccarthy
+
+root@docker-host ~ ➜  docker rm serene_mccarthy
+Error response from daemon: cannot remove container "serene_mccarthy": container is running: stop the container before removing or force remove
+
+root@docker-host ~ ✖ docker stop serene_mccarthy
+serene_mccarthy
+
+root@docker-host ~ ➜  docker rm serene_mccarthy
+serene_mccarthy
+
+root@docker-host ~ ➜  docker ps -a
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+
+root@docker-host ~ ➜  docker ps -a
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS                      PORTS     NAMES
+f1f6fb0d31b1   alpine         "/bin/sh"                28 seconds ago   Exited (0) 26 seconds ago             charming_moser
+15bf686a0ad8   alpine         "sleep 1000"             28 seconds ago   Up 27 seconds                         quirky_banzai
+5e6aacfdb85b   nginx:alpine   "/docker-entrypoint.…"   29 seconds ago   Up 28 seconds               80/tcp    nginx-2
+2e7f1e8045fb   nginx:alpine   "/docker-entrypoint.…"   29 seconds ago   Up 28 seconds               80/tcp    nginx-1
+5885caa26e36   ubuntu         "sleep 1000"             30 seconds ago   Up 29 seconds                         awesome_northcut
+
+root@docker-host ~ ➜  docker rm f1f6 15bf 5e6a 2e7f 5885
+f1f6
+Error response from daemon: cannot remove container "15bf": container is running: stop the container before removing or force remove
+Error response from daemon: cannot remove container "5e6a": container is running: stop the container before removing or force remove
+Error response from daemon: cannot remove container "2e7f": container is running: stop the container before removing or force remove
+Error response from daemon: cannot remove container "5885": container is running: stop the container before removing or force remove
+
+root@docker-host ~ ✖ docker stop  15bf 5e6a 2e7f 5885
+15bf
+5e6a
+2e7f
+5885
+
+root@docker-host ~ ➜  docker rm  15bf 5e6a 2e7f 5885
+15bf
+5e6a
+2e7f
+5885
+
+root@docker-host ~ ➜  docker rmi ubuntu
+Untagged: ubuntu:latest
+Deleted: sha256:f3d28607ddd78734bb7f71f117f3c6706c666b8b76cbff7c9ff6e5718d46ff64
+
+root@docker-host ~ ➜  docker pull nginx:1.28-alpine
+1.28-alpine: Pulling from library/nginx
+0151c82f84a9: Pull complete 
+d631a49fb4f7: Pull complete 
+1d9cbdb003be: Pull complete 
+589002ba0eae: Pull complete 
+e914c6e98e37: Pull complete 
+98104829f3fe: Pull complete 
+8f7c784e2471: Pull complete 
+44fa0a5a779f: Pull complete 
+f2baa5b25d86: Download complete 
+8654f8d1249e: Download complete 
+Digest: sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236
+Status: Downloaded newer image for nginx:1.28-alpine
+docker.io/library/nginx:1.28-alpine
+
+root@docker-host ~ ➜  docker run -d nginx:1.28-alpine
+c6dabfd538a4ca20d1d9130a0ff07db1dce687abe42bf57b841bf5ed538791e7
+
+root@docker-host ~ ➜  docker rename c6da webapp
+
+root@docker-host ~ ➜  docker run -d -p 38282:8080 --name blue-app kodekloud/simple-webapp:blue
+0f42284ed8942ba30aa63b9812f4f0c25761e91a82405c64f5c7ed350447c5be
+
+root@docker-host ~ ➜  cat webapp-color/Dockerfile
+FROM python:3.14
+
+RUN pip install flask
+
+COPY . /opt/
+
+EXPOSE 8080  (port running app on container)
+
+WORKDIR /opt
+
+ENTRYPOINT ["python", "app.py"] (starts running app ie python app.py)
+
+Build a docker image using the Dockerfile and name it webapp-color. Do not specify a tag.
+root@docker-host ~ ➜  docker build -t webapp-color webapp-color/
+[+] Building 34.2s (9/9) FINISHED                                                                                                                      docker:default
+
+root@docker-host ~ ➜  docker run -d -p 8282:8080 webapp-color
+8024ce8408f3a9716136308d1a406fc8157db2cfa4964ff4d5104e35089a2422
+
+What is the base Operating System used by the python:3.14 image?
+
+If required, run an instance of the image to figure it out.
+root@docker-host ~ ➜  docker run --rm python:3.14 sh -c "cat /etc/os-release"
+Unable to find image 'python:3.14' locally
+3.14: Pulling from library/python
+Digest: sha256:5f1cdbcab9a50594a79502dd73e885456d2a2fc31f1a1fa18484815b37ee9152
+Status: Downloaded newer image for python:3.14
+PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+NAME="Debian GNU/Linux"
+VERSION_ID="13"
+VERSION="13 (trixie)"
+VERSION_CODENAME=trixie
+DEBIAN_VERSION_FULL=13.6
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+
+very heavy os so we change it to py alpine inside docker file 
+
+root@docker-host ~ ➜  cd webapp-color
+
+root@docker-host ~/webapp-color via 🐍 ➜  nano Dockerfile
+
+change inside the ctrl+O then enter then ctrl+X 
+
+rebuild  
+
+docker build -t webapp-color:lite .
+
+docker images webapp-color:lite
+                                                                                                                                                  i Info →   U  In Use
+IMAGE               ID             DISK USAGE   CONTENT SIZE   EXTRA
+webapp-color:lite   6c998494293c       97.5MB         23.9MB        
+
+root@docker-host ~/webapp-color via 🐍 ➜  docker run -d -p 8383:8080 webapp-color:lite
+f891426ea6bc909b59032898518e98fbd617cef00b963f62e82b8804ab724f04
+
+
+root@docker-host ~ ✖ ls -la /root  // lists all files in root dir
+total 60
+drwx------ 1 root root 4096 Aug  1 12:48 .
+dr-xr-xr-x 1 root root 4096 Aug  1 12:48 ..
+-rw-r--r-- 1 root root  561 Aug  1 12:40 .bash_profile
+-rw-r--r-- 1 root root 3135 Dec  6  2024 .bashrc
+drwx------ 3 root root 4096 Aug  1 12:48 .cache
+drwxr-xr-x 1 root root 4096 Dec  6  2024 .config
+-rw-r--r-- 1 root root  161 Apr 22  2024 .profile
+drwx------ 1 root root 4096 Aug  1 12:48 .ssh
+drwx------ 2 root root 4096 Aug  1 12:48 .terminal_logs
+-rw-r--r-- 1 root root 3627 May 12 05:43 Dockerfile-mysql
+-rw-r--r-- 1 root root 1925 May 12 05:43 Dockerfile-python
+-rw-r--r-- 1 root root  726 May 12 05:43 Dockerfile-ubuntu
+-rw-r--r-- 1 root root 2903 May 12 05:43 Dockerfile-wordpress
+drwxr-xr-x 2 root root 4096 Aug  1 12:48 app
+
+
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+CMD ["apache2-foreground"]
+
+What is the final command run at startup when the wordpress image is run?
+
+Consider both ENTRYPOINT and CMD instructions.
+
+soln -: docker-entrypoint.sh apache2-foreground
+
+root@docker-host ~ ➜  docker run -d --name blue-app -e APP_COLOR=blue -p 38282:8080 kodekloud/simple-webapp
+9cff5dca5f2ed7c431e84d601f429325f36de6830b3da22a2280e3535d836abb
+
+
+docker run -d --name mysql-db -e MYSQL_ROOT_PASSWORD=db_pass123 mysql
